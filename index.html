@@ -13,6 +13,7 @@
     <title>Mega Medical - Jiwon Ha</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         
@@ -36,9 +37,21 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color 0.5s ease;
+            overflow: hidden;
+            transition: all 0.5s ease;
         }
+
+        /* FEVER MODE 애니메이션 */
+        @keyframes fever-bg {
+            0% { background-color: #ff0000; }
+            20% { background-color: #ff00ff; }
+            40% { background-color: #0000ff; }
+            60% { background-color: #00ffff; }
+            80% { background-color: #00ff00; }
+            100% { background-color: #ffff00; }
+        }
+        .fever-mode { animation: fever-bg 0.5s infinite; }
+        .fever-mode .card-container { transform: scale(1.05) rotate(1deg); filter: hue-rotate(90deg); }
 
         .card-container {
             width: 100%;
@@ -133,30 +146,31 @@
 
         #easter-egg-container {
             position: fixed;
-            bottom: -150px;
+            bottom: -200px;
             right: 20px;
-            width: 90px;
-            height: 90px;
+            width: 110px;
+            height: 110px;
             z-index: 100;
             transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
         #easter-egg-container.show { bottom: 25px; }
-        #easter-egg-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 1.5rem; border: 3px solid white; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        #easter-egg-container img { width: 100%; height: 100%; object-fit: cover; border-radius: 1.5rem; border: 4px solid white; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
 
         .hidden-triggers {
             margin-top: 2.5rem;
             display: flex;
             justify-content: center;
             gap: 25px;
-            opacity: 0.02; 
+            opacity: 0.05; 
         }
-        .trigger-dot { width: 10px; height: 10px; background: #000; border-radius: 50%; cursor: pointer; }
+        .trigger-dot { width: 12px; height: 12px; background: #000; border-radius: 50%; cursor: pointer; transition: transform 0.2s; }
+        .trigger-dot:hover { transform: scale(1.5); }
 
         #toast {
             visibility: hidden;
             min-width: 240px;
-            background-color: #1e293b;
+            background-color: rgba(30, 41, 59, 0.9);
             color: white;
             text-align: center;
             border-radius: 50px;
@@ -167,25 +181,21 @@
             bottom: 40px;
             transform: translateX(-50%);
             font-size: 13px;
+            backdrop-filter: blur(5px);
         }
         #toast.show { visibility: visible; animation: fadein 0.4s, fadeout 0.4s 2.6s; }
 
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 40px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 40px; opacity: 1;} to {bottom: 0; opacity: 0;} }
-
-        /* 테마별 오버라이드 스타일 */
-        .siren-mode { --theme-color: #818CF8; --theme-bg: #020617; --theme-card: #0F172A; --theme-text: #F8FAFC; --theme-sub: #94A3B8; --theme-rgb: 129, 140, 248; }
-        .doro-mode { --theme-color: #FF85A1; --theme-bg: #FFF5F7; --theme-card: #ffffff; --theme-text: #4A1D1F; --theme-sub: #A07676; --theme-rgb: 255, 133, 161; }
-        .crown-mode { --theme-color: #C5A059; --theme-bg: #E7E5E4; --theme-card: #ffffff; --theme-text: #1C1917; --theme-sub: #78716C; --theme-rgb: 197, 160, 89; }
     </style>
 </head>
 <body onclick="hideEasterEgg()">
 
     <script>
-        // 전역 함수 정의
         function handleImageError() {
             const img = document.getElementById('profile-img');
             const initial = document.getElementById('profile-initial');
+            console.log("Image load failed. Showing initials.");
             if (img) img.style.display = 'none';
             if (initial) initial.style.display = 'block';
         }
@@ -252,6 +262,7 @@
                 <div class="trigger-dot" onclick="triggerEasterEgg('doro')"></div>
                 <div class="trigger-dot" onclick="triggerEasterEgg('siren')"></div>
                 <div class="trigger-dot" onclick="triggerEasterEgg('crown')"></div>
+                <div class="trigger-dot" id="fever-trigger" onclick="feverClick()"></div>
             </div>
 
             <div class="mt-8 text-center">
@@ -265,8 +276,9 @@
     <script>
         let currentLang = 'ko';
         let isSpecialMode = false;
+        let feverCount = 0;
         
-        const getCacheBuster = () => "?v=" + Math.random().toString(36).substring(7);
+        const getCacheBuster = () => "?v=" + Date.now();
         const GITHUB_BASE = "https://raw.githubusercontent.com/hajwmg/nfc-zoayoo/main/";
         
         const IMAGES = {
@@ -328,6 +340,8 @@
             body.classList.add(`${type}-mode`);
             
             const targetImg = IMAGES[type] + buster;
+            
+            // 프로필 이미지를 즉시 변경
             profileImg.src = targetImg;
             eggImg.src = targetImg;
 
@@ -337,7 +351,53 @@
             };
             
             document.getElementById('easter-egg-container').classList.add('show');
-            showToast(`${type.toUpperCase()} 테마가 적용되었습니다.`);
+            showToast(`${type.toUpperCase()} 테마가 적용되었습니다!`);
+            
+            // 축하 효과 (Confetti)
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: [getComputedStyle(document.documentElement).getPropertyValue('--theme-color')]
+            });
+        }
+
+        function feverClick() {
+            feverCount++;
+            if(feverCount >= 5) {
+                startFeverMode();
+                feverCount = 0;
+            } else {
+                showToast(`FEVER 로딩 중... (${feverCount}/5)`);
+            }
+        }
+
+        function startFeverMode() {
+            const body = document.body;
+            body.classList.add('fever-mode');
+            showToast("🔥 FEVER MODE ACTIVATED! 🔥");
+            
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+              const timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                clearInterval(interval);
+                body.classList.remove('fever-mode');
+                return;
+              }
+
+              const particleCount = 50 * (timeLeft / duration);
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
         }
 
         function checkLogoReset() {
@@ -348,10 +408,15 @@
             isSpecialMode = false;
             const body = document.body;
             const logoBox = document.getElementById('logo-box');
-            body.classList.remove('siren-mode', 'crown-mode', 'doro-mode');
+            const profileImg = document.getElementById('profile-img');
+            const initial = document.getElementById('profile-initial');
+
+            body.classList.remove('siren-mode', 'crown-mode', 'doro-mode', 'fever-mode');
             logoBox.classList.remove('clickable');
             
-            handleImageError();
+            profileImg.style.display = 'none';
+            initial.style.display = 'block';
+            
             document.getElementById('easter-egg-container').classList.remove('show');
             showToast(TRANSLATIONS[currentLang].reset);
         }
