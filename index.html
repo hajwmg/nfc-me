@@ -161,7 +161,6 @@
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 40px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 40px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-        /* 테마별 모드 */
         .siren-mode { --theme-color: #818CF8; --theme-bg: #020617; --theme-card: #0F172A; --theme-text: #F8FAFC; --theme-rgb: 129, 140, 248; }
         .doro-mode { --theme-color: #FF85A1; --theme-bg: #FFF5F7; --theme-card: #ffffff; --theme-text: #4A1D1F; --theme-rgb: 255, 133, 161; }
         .crown-mode { --theme-color: #C5A059; --theme-bg: #E7E5E4; --theme-card: #ffffff; --theme-text: #1C1917; --theme-rgb: 197, 160, 89; }
@@ -181,9 +180,7 @@
                 <span class="logo-bottom">MEDICAL</span>
             </div>
             <div class="avatar-circle">
-                <!-- 이미지가 있으면 이걸 보여줌 -->
-                <img id="profile-img" src="" alt="Profile">
-                <!-- 이미지가 없거나 로딩 실패하면 이걸 보여줌 -->
+                <img id="profile-img" src="" alt="Profile" onerror="this.style.display='none'; document.getElementById('profile-initial').style.display='block';">
                 <span id="profile-initial" class="avatar-initial">JW</span>
             </div>
         </div>
@@ -194,9 +191,7 @@
                     <span id="name-main">하지원</span>
                     <span id="name-sub" class="text-lg font-normal opacity-40">Jiwon Ha</span>
                 </h1>
-                <p id="job-title" class="text-sm font-bold mt-1 theme-text">
-                    영업기획팀 | 사원
-                </p>
+                <p id="job-title" class="text-sm font-bold mt-1 theme-text">영업기획팀 | 사원</p>
                 <div class="h-1.5 w-10 mt-4 rounded-full" style="background-color: var(--theme-color);" id="accent-bar"></div>
             </div>
 
@@ -205,7 +200,6 @@
                     <i class="fa-solid fa-address-book"></i> 
                     <span id="btn-text">연락처 저장하기</span>
                 </button>
-                
                 <div class="grid grid-cols-2 gap-3">
                     <a href="tel:01000000000" class="soft-item py-4 rounded-2xl flex flex-col items-center justify-center gap-1 group">
                         <i class="fa-solid fa-phone text-xl theme-icon"></i>
@@ -224,7 +218,6 @@
                 <p id="address-text" class="text-[11px] opacity-60 leading-relaxed">서울특별시 강남구 봉은사로 439 (CC빌딩 5층)</p>
             </div>
 
-            <!-- 테마를 바꾸는 숨겨진 버튼들 (하단 투명 영역) -->
             <div class="hidden-triggers">
                 <div class="trigger-dot" onclick="applyTheme('doro')"></div>
                 <div class="trigger-dot" onclick="applyTheme('siren')"></div>
@@ -241,15 +234,7 @@
 
     <script>
         let currentLang = 'ko';
-        // 깃허브 주소 확인
         const GITHUB_BASE = "https://raw.githubusercontent.com/hajwmg/nfc-zoayoo/main/";
-        
-        // 파일 정보 (대소문자 주의!)
-        const THEME_FILES = {
-            doro: { name: "DORO", exts: ["jpg", "jfif", "JPG", "JFIF"] },
-            siren: { name: "siren", exts: ["jpg", "jfif", "JPG", "JFIF"] },
-            crown: { name: "crown", exts: ["jpg", "jfif", "JPG", "JFIF"] }
-        };
 
         const TRANSLATIONS = {
             ko: {
@@ -264,44 +249,19 @@
             }
         };
 
-        // 이미지를 찾을 때까지 모든 확장자를 돌려보는 로직
-        async function fetchImage(type) {
-            const file = THEME_FILES[type];
-            const imgEl = document.getElementById('profile-img');
-            const initialEl = document.getElementById('profile-initial');
-            
-            // 시도할 때마다 랜덤 숫자를 붙여 캐시 방지
-            const cacheBuster = `?v=${new Date().getTime()}`;
-
-            for (let ext of file.exts) {
-                const url = `${GITHUB_BASE}${file.name}.${ext}${cacheBuster}`;
-                
-                const isFound = await new Promise((resolve) => {
-                    const testImg = new Image();
-                    testImg.onload = () => resolve(true);
-                    testImg.onerror = () => resolve(false);
-                    testImg.src = url;
-                });
-
-                if (isFound) {
-                    imgEl.src = url;
-                    imgEl.style.display = 'block';
-                    initialEl.style.display = 'none';
-                    return; // 이미지를 찾으면 종료
-                }
-            }
-            
-            // 끝내 못 찾으면 이니셜 표시
-            imgEl.style.display = 'none';
-            initialEl.style.display = 'block';
-        }
-
         function applyTheme(type) {
             document.body.classList.remove('siren-mode', 'crown-mode', 'doro-mode');
             document.body.classList.add(`${type}-mode`);
             document.getElementById('logo-box').classList.add('clickable');
 
-            fetchImage(type);
+            const imgEl = document.getElementById('profile-img');
+            const initialEl = document.getElementById('profile-initial');
+            
+            // 모든 파일명을 소문자 .jpg로 고정 호출
+            imgEl.src = `${GITHUB_BASE}${type}.jpg?v=${new Date().getTime()}`;
+            imgEl.style.display = 'block';
+            initialEl.style.display = 'none';
+
             showToast(`${type.toUpperCase()} 테마 적용`);
         }
 
