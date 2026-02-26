@@ -228,7 +228,6 @@
         }
         .nikke-mode .caution-bar { display: block; }
 
-        /* 홈페이지 가변 링크 스타일 */
         #web-link-btn {
             transition: all 0.3s ease;
             text-decoration: none;
@@ -240,12 +239,15 @@
             border-left: 4px solid var(--theme-color);
             background: #1a1a1a;
         }
+
+        /* 주소 뱃지 동적 스타일 */
+        .nikke-mode #addr-badge {
+            background-color: var(--theme-color);
+            color: #000;
+            font-family: 'Share Tech Mono', monospace;
+        }
     </style>
     <script>
-        /**
-         * 이미지 로드 실패 시 실행되는 함수
-         * img 태그의 onerror 이벤트에서 참조하므로 head 섹션에 정의하여 즉시 가용하도록 함
-         */
         function imgError() {
             const imgEl = document.getElementById('profile-img');
             const initialEl = document.getElementById('profile-initial');
@@ -257,7 +259,6 @@
 <body>
 
     <div class="card-container mx-4" id="main-card">
-        <!-- 작전 모드 종료 버튼 -->
         <div class="exit-btn" onclick="resetToDefault()"></div>
 
         <div class="lang-switch">
@@ -277,7 +278,6 @@
         </div>
 
         <div class="content">
-            <!-- 니케 이스터에그: 루나 배지 -->
             <div class="nikke-badge">
                 <div class="luna-text">LUNA</div>
                 <div class="luna-sub">SSR // ATTACKER</div>
@@ -305,14 +305,14 @@
                         <i class="fa-solid fa-phone text-xl transition-transform group-hover:scale-110" style="color: var(--theme-color);"></i>
                         <span id="label-mobile" class="text-[10px] font-bold opacity-50 uppercase">Mobile</span>
                     </a>
-                    <a href="mailto:jwha@megamedical.co.kr" class="soft-item py-4 flex flex-col items-center justify-center gap-1 group">
-                        <i class="fa-solid fa-envelope text-xl transition-transform group-hover:scale-110" style="color: var(--theme-color);"></i>
+                    <!-- 이스터에그: 작전모드 시 니케 앱 실행 시도 -->
+                    <a id="email-btn" href="mailto:jwha@megamedical.co.kr" onclick="handleEmailClick(event)" class="soft-item py-4 flex flex-col items-center justify-center gap-1 group">
+                        <i id="email-icon" class="fa-solid fa-envelope text-xl transition-transform group-hover:scale-110" style="color: var(--theme-color);"></i>
                         <span id="label-email" class="text-[10px] font-bold opacity-50 uppercase">Email</span>
                     </a>
                 </div>
             </div>
 
-            <!-- 홈페이지 가변 링크 -->
             <a id="web-link-btn" href="https://www.megamedical.co.kr" target="_blank" class="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-6 group">
                 <div>
                     <p id="web-label" class="text-[10px] font-black mb-1 opacity-30 tracking-widest uppercase">Official Website</p>
@@ -322,8 +322,8 @@
             </a>
 
             <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-6" id="address-box">
-                <p class="text-[10px] font-black mb-2 opacity-30 tracking-widest uppercase">Office Location</p>
-                <p class="text-xs font-bold mb-1">본사 (Seoul HQ)</p>
+                <p id="addr-badge" class="text-[10px] font-black mb-2 opacity-30 tracking-widest uppercase inline-block px-2 py-0.5 rounded">Office Location</p>
+                <p id="addr-title" class="text-xs font-bold mb-1">본사 (Seoul HQ)</p>
                 <p id="address-text" class="text-[11px] text-slate-500 leading-relaxed">서울특별시 강남구 봉은사로 439 (CC빌딩 5층)</p>
             </div>
 
@@ -363,7 +363,6 @@
                 initialEl.style.display = 'none';
             };
             
-            // 데이터 동기화 텍스트 변경
             document.getElementById('btn-text').textContent = "데이터 동기화 (SYNC)";
 
             // 홈페이지 링크 변경
@@ -371,6 +370,15 @@
             webBtn.href = "https://nikke-kr.com/";
             document.getElementById('web-label').textContent = "TACTICAL DATABASE";
             document.getElementById('web-title').textContent = "NIKKE COMMAND CENTER";
+
+            // 주소 변경 (방주)
+            document.getElementById('addr-badge').textContent = "OPERATIONAL BASE";
+            document.getElementById('addr-title').textContent = "[CLASSIFIED] Sector 01";
+            document.getElementById('address-text').textContent = "THE ARK (지상 거점: 방주)";
+
+            // 이메일 아이콘/라벨 변경 시각적 힌트
+            document.getElementById('label-email').textContent = "DEPLOY NIKKE";
+            document.getElementById('email-icon').className = "fa-solid fa-crosshairs text-xl transition-transform group-hover:scale-110";
         }
 
         function resetToDefault() {
@@ -380,7 +388,6 @@
             imgEl.style.display = 'none';
             initialEl.style.display = 'block';
             
-            // 텍스트 원복
             const isEn = document.getElementById('btn-en').classList.contains('active');
             document.getElementById('btn-text').textContent = isEn ? "Save Contact" : "연락처 저장하기";
 
@@ -389,8 +396,36 @@
             webBtn.href = "https://www.megamedical.co.kr";
             document.getElementById('web-label').textContent = "OFFICIAL WEBSITE";
             document.getElementById('web-title').textContent = isEn ? "Mega Medical Official Site" : "메가메디칼 공식 홈페이지";
+
+            // 주소 원복
+            document.getElementById('addr-badge').textContent = "OFFICE LOCATION";
+            document.getElementById('addr-title').textContent = "본사 (Seoul HQ)";
+            document.getElementById('address-text').textContent = isEn ? "5F, CC Bldg, 439, Bongeunsa-ro, Seoul, Korea" : "서울특별시 강남구 봉은사로 439 (CC빌딩 5층)";
+
+            // 이메일 원복
+            document.getElementById('label-email').textContent = "EMAIL";
+            document.getElementById('email-icon').className = "fa-solid fa-envelope text-xl transition-transform group-hover:scale-110";
             
             showToast("System Restored to Business Mode");
+        }
+
+        function handleEmailClick(e) {
+            if (document.body.classList.contains('nikke-mode')) {
+                e.preventDefault();
+                showToast("INITIALIZING NIKKE DEPLOYMENT...");
+                
+                // 니케 앱 커스텀 스킴 실행 시도 (com.proximabeta.nikke)
+                const appUri = "com.proximabeta.nikke://";
+                const storeUri = "https://play.google.com/store/apps/details?id=com.proximabeta.nikke";
+                
+                const start = Date.now();
+                setTimeout(() => {
+                    if (Date.now() - start < 2000) {
+                        window.location.href = storeUri;
+                    }
+                }, 500);
+                window.location.href = appUri;
+            }
         }
 
         function setLang(lang) {
@@ -399,13 +434,13 @@
                 ko: { 
                     name: "하지원", sub: "Jiwon Ha", 
                     btn: isNikke ? "데이터 동기화 (SYNC)" : "연락처 저장하기", 
-                    addr: "서울특별시 강남구 봉은사로 439 (CC빌딩 5층)",
+                    addr: isNikke ? "THE ARK (지상 거점: 방주)" : "서울특별시 강남구 봉은사로 439 (CC빌딩 5층)",
                     web: isNikke ? "NIKKE COMMAND CENTER" : "메가메디칼 공식 홈페이지"
                 },
                 en: { 
                     name: "Jiwon Ha", sub: "", 
                     btn: isNikke ? "DATA SYNC" : "Save Contact", 
-                    addr: "5F, CC Bldg, 439, Bongeunsa-ro, Seoul, Korea",
+                    addr: isNikke ? "THE ARK (Sector 01)" : "5F, CC Bldg, 439, Bongeunsa-ro, Seoul, Korea",
                     web: isNikke ? "NIKKE COMMAND CENTER" : "Mega Medical Official Site"
                 }
             }[lang];
